@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>dizeng_ex6</title>
+		<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.js"></script>-->
+		<script src = "https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+		<script src="https://d3js.org/topojson.v2.min.js"></script>
+		<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet">
+			<style type="text/css">
+
+		.text-styling{
+			font-family: "Arial";
+			font-size: 14px;
+  		fill: grey;
+
+		}
+
+		.titlestyling{
+			font-family: "Arial";
+			font-size: 18px;
+  		fill: Black;
+
+		}
+
+		h1 {
+				position: absolute;
+				left: 10px;
+				font-size: 1.3em;
+				font-weight: 100;
+		}
+
+		 #tooltip.hidden{
+			 display:none;
+		 }
+
+		 #tooltip{
+			 position: absolute;
+			 padding: 5px;
+			 background-color:white;
+			 width: 120px;
+			 height: 120px;
+			 opacity: 0.6;
+			 border: solid grey 1px;
+			 z-index:10;
+
+		 }
+
+
+			</style>
+		</head>
+		<body>
+
+
+		<div id="main">
+
+		</div>
+
+
+		<div id = "map">
+			<h1>Twitter Requests in Boston</h1>
+			<br></br>
+			<div id = "tooltip" class = "hidden">
+
+				<p><span id = "value">100</span></p>
+
+
+			</div>
+		</div>
+
+		<!-- <script type="text/javascript"> -->
+		<script>
+			var width = 1200;
+			var height = 750;
+
+			agriculturedata = [["Brazil", 33.9],["Canada", 6.9],["Costa Rica", 34.5],["Denmark", 62],["Fiji", 23.3],["France", 52.4],["Greenland", .6],["Italy", 43.2],["Mali",33.8],["Netherlands",53.3]];
+
+			var svg = d3.select("div#main")
+						.append("svg")
+						.attr("width", width)
+						.attr("height", height);
+
+			svg.selectAll("rect")
+               .data(agriculturedata)
+               .enter()
+               .append("rect")
+               .attr("y", function(d, i) {
+                       return i*50 + 80;
+                  })
+               .attr("x", 160)
+               .attr("width", function(d) {
+                       return d[1]*2*2;
+                  })
+          	   .attr("height", 20*2)
+               .attr("fill", "green")
+							 .attr("opacity", "0.7");
+
+			 svg.selectAll("line")
+			 				 .data(agriculturedata)
+							 .enter()
+							 .append("line")
+							 .attr("x1", function(d,i){
+							 return 160+30*i})
+							 .attr("x2", function(d,i){
+							 return 160+30*i})
+							 .attr("y1", "570")
+							 .attr("y2", "80")
+							 .attr("stroke","grey")
+							 .attr("stroke-width", "1")
+							 .attr("stroke-opacity", "0.5")
+
+			 svg.append("line")
+							 .attr("x1", "160")
+							 .attr("x2", "430")
+							 .attr("y1", "570")
+							 .attr("y2", "570")
+							 .attr("stroke","grey")
+							 .attr("stroke-width", "2");
+
+			 svg.append("line")
+							 .attr("x1", "160")
+							 .attr("x2", "160")
+							 .attr("y1", "570")
+							 .attr("y2", "80")
+							 .attr("stroke","grey")
+							 .attr("stroke-width", "2");
+
+				svg.selectAll("text")
+								.data(agriculturedata)
+								.enter()
+								.append("text")
+								.text(function(d){
+									return d[0]
+								})
+								.attr("class","text-styling")
+								.attr("text-anchor", "end")
+								.attr("transform", "rotate(0)")
+								.attr("x", "140")
+								.attr("y", function(d, i) {
+                        return i*50 + 100;
+                   });
+
+					svg.append("text")
+								.attr("class", "titlestyling")
+								.text("2016 Agriculture Land")
+								.attr("text-anchor","middle")
+								.attr("x", "300")
+								.attr("y", "50");
+
+					svg.append("text")
+								// .attr("class", "text-styling")
+								.text("Country")
+								.attr("text-anchor", "end")
+								.attr("transform", "rotate(-90)")
+								.attr("x", "-260")
+								.attr("y", "40")
+								.attr("fill", "black")
+								.attr("font", "Arial")
+
+
+
+					var bostonurl = "https://gist.githubusercontent.com/cesandoval/09b2e39263c748fbcb84b927cecc7c46/raw/ab71d3638efd2545ec99c2651c6f2ddcea9d2a07/boston.json"
+					var boston_311url = "https://raw.githubusercontent.com/brookefzy/BigData2020/master/pset6/boston_311.csv"
+
+
+					var svg = d3.select("div#map")
+								.append("svg")
+								.attr("width", width)
+								.attr("height", height)
+
+					var g = svg.append("svg")
+
+					var albersProjection = d3.geoAlbers()
+							.scale(190000)
+							.rotate([71.057, 0])
+							.center([0, 42.313])
+							.translate([width / 3, height / 2])
+
+					var geoPath = d3.geoPath()
+              .projection(albersProjection)
+
+							var bos_311 = d3.map()
+							var promises = [
+								d3.json(bostonurl),
+								d3.csv(boston_311url,function(d){bos_311.set(d.id,[d.Name,d.twitter,d.tot_count]);
+								})
+							]
+
+					var color = d3.scaleQuantize()
+						.domain([-0.5,5.8])
+						.range(d3.schemePurples[9]);
+
+					var x = d3.scaleLinear()
+		           .domain([-0.5,5.8])
+		           .rangeRound([600, 860]);
+	       	var g = svg.append("g")
+				 			 .attr("class", "key")
+							 .attr("transform", "translate(0,40)");
+
+				 g.selectAll("rect")
+           .data(color.range().map(function(d) {
+               d = color.invertExtent(d);
+               if (d[0] == null) d[0] = x.domain()[0];
+               if (d[1] == null) d[1] = x.domain()[1];
+               return d;
+           }))
+           .enter().append("rect")
+           .attr("height", 8)
+           .attr("x", function(d) { return x(d[0]); })
+           .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+           .attr("fill", function(d) { return color(d[0]); });
+
+       g.append("text")
+           .attr("class", "caption")
+           .attr("x", x.range()[0])
+           .attr("y", -6)
+           .attr("fill", "#000")
+           .attr("text-anchor", "start")
+           .attr("font-weight", "bold")
+           .text("Tweets per Neighborhood (Log Scale)");
+
+       g.call(d3.axisBottom(x)
+       .tickSize(13)
+       .tickFormat(function(x, i) { return i ? x : x  })
+       .tickValues(color.domain()))
+       .select(".domain")
+       .remove();
+
+
+
+
+
+							// d3.json(bostonurl).then(ready)
+					Promise.all(promises).then(ready)
+
+
+
+					function ready([boston]){
+
+						svg.append("g")
+						.selectAll("path")
+								.data(topojson.feature(boston, boston.objects.boston_neigh).features)
+								.enter()
+								.append("path")
+								.attr("fill", function(d){
+	 							 return color(Math.log(bos_311.get(d.properties.OBJECTID)[1]))
+	 						 })
+								// .attr("fill", "white")
+								.attr("stroke", "black")
+								.attr("stroke-width", "0.4")
+								.attr("d", geoPath)
+
+								.on("mouseover", function(d){
+                  d3.select("#tooltip")
+									.style("left", d3.event.pageX + "px")
+									.style("top", d3.event.pageY + "px")
+									.select("#value")
+									.html("<p>" + String(bos_311.get(d.properties.OBJECTID)[0]) + "<br></br>"
+									+ String((100*bos_311.get(d.properties.OBJECTID)[1]/bos_311.get(d.properties.OBJECTID)[2]).toFixed(2)) + String("%")
+									// + String(bos_311.get(d.properties.OBJECTID)[2])
+									+ "</p>")
+									d3.select("#tooltip").classed("hidden", false);})
+
+									.on("mouseout", function(){
+										d3.select("#tooltip").classed("hidden",true)
+									})
+
+									// .text(bos_311.get(d.properties.PBJECTID)[0])
+                  // d3.select(this).attr("class", "incident hover")
+                // })
+							}
+
+
+
+
+
+
+
+
+
+		</script>
+</div>
+	</body>
+</html>
